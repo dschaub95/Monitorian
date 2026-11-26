@@ -143,6 +143,32 @@ public class Settings : BindableBase
 	private bool _enablesIdentity;
 
 	/// <summary>
+	/// Whether to change brightness by schedule
+	/// </summary>
+	[DataMember]
+	public bool UsesBrightnessSchedule
+	{
+		get => _usesBrightnessSchedule;
+		set => SetProperty(ref _usesBrightnessSchedule, value);
+	}
+	private bool _usesBrightnessSchedule;
+
+	/// <summary>
+	/// Brightness schedule
+	/// </summary>
+	/// <remarks>
+	/// Entries of "HH:mm brightness" separated by semicolons. See <see cref="Models.BrightnessSchedule"/>.
+	/// </remarks>
+	[DataMember]
+	public string BrightnessSchedule
+	{
+		// Field initializers do not run on deserialization, so fall back to default here.
+		get => _brightnessSchedule ??= "07:00 80; 19:00 50; 22:00 20"; // Default
+		set => SetProperty(ref _brightnessSchedule, value);
+	}
+	private string _brightnessSchedule;
+
+	/// <summary>
 	/// Monitor customizations by user
 	/// </summary>
 	[DataMember]

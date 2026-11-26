@@ -41,6 +41,7 @@ public abstract class AppController
 	private readonly DisplayInformationWatcher _displayInformationWatcher;
 	private readonly BrightnessWatcher _brightnessWatcher;
 	private readonly BrightnessConnector _brightnessConnector;
+	private readonly BrightnessScheduler _brightnessScheduler;
 
 	public AppController(AppKeeper keeper, Settings settings)
 	{
@@ -61,6 +62,7 @@ public abstract class AppController
 		_displayInformationWatcher = new DisplayInformationWatcher();
 		_brightnessWatcher = new BrightnessWatcher();
 		_brightnessConnector = new BrightnessConnector();
+		_brightnessScheduler = new BrightnessScheduler();
 	}
 
 	public virtual async Task InitiateAsync()
@@ -135,6 +137,11 @@ public abstract class AppController
 			}
 		}
 
+		_brightnessScheduler.Subscribe(ApplyScheduledBrightness, CanApplyScheduledBrightness);
+		_brightnessScheduler.SetSchedule(BrightnessSchedule.Parse(Settings.BrightnessSchedule));
+		if (Settings.UsesBrightnessSchedule)
+			_brightnessScheduler.Start();
+
 		await CleanAsync();
 	}
 
@@ -151,6 +158,7 @@ public abstract class AppController
 		_displayInformationWatcher.Dispose();
 		_brightnessWatcher.Dispose();
 		_brightnessConnector.Dispose();
+		_brightnessScheduler.Dispose();
 	}
 
 	protected virtual Task<string> HandleRequestAsync(IReadOnlyCollection<string> args)
@@ -274,6 +282,18 @@ public abstract class AppController
 
 				break;
 
+			case nameof(Settings.UsesBrightnessSchedule):
+				if (Settings.UsesBrightnessSchedule)
+					_brightnessScheduler.Start();
+				else
+					_brightnessScheduler.Stop();
+
+				break;
+
+			case nameof(Settings.BrightnessSchedule):
+				_brightnessScheduler.SetSchedule(BrightnessSchedule.Parse(Settings.BrightnessSchedule));
+				break;
+
 			case nameof(Settings.RecordsOperationLog):
 				if (Settings.RecordsOperationLog)
 					await OperationRecorder.EnableAsync("Enabled");
@@ -291,6 +311,9 @@ public abstract class AppController
 		OperationRecorder.Record($"{nameof(OnMonitorsChangeInferred)} ({sender}{e?.Description})");
 
 		await ProceedScanAsync(e);
+
+		// Apply an entry that took effect while monitors could not be reached.
+		_brightnessScheduler.Check();
 	}
 
 	protected virtual async Task ProceedScanAsync(ICountEventArgs e)
@@ -507,6 +530,20 @@ public abstract class AppController
 
 		EnsureUnisonWorkable(monitor);
 		monitor?.UpdateBrightness((int)sdrWhiteLevel);
+	}
+
+	protected virtual bool CanApplyScheduledBrightness() =>
+		!_sessionWatcher.IsLocked && !_powerWatcher.IsDisplayOff && (_scanCount == 0) && Monitors.Any(x => x.IsTarget && x.IsControllable);
+
+	protected virtual async Task<bool> ApplyScheduledBrightness(int brightness)
+	{
+		var monitors = Monitors.Where(x => x.IsTarget && x.IsControllable).ToArray();
+
+		var results = await Task.WhenAll(monitors.Select(m => Task.Run(() => m.SetBrightness(brightness))));
+		var succeeded = results.Any(x => x);
+
+		OperationRecorder.Record($"{nameof(ApplyScheduledBrightness)} ({brightness}% to {results.Count(x => x)}/{monitors.Length} monitor(s))");
+		return succeeded;
 	}
 
 	private void ReflectMouseWheel(int delta)

@@ -1,0 +1,381 @@
+﻿<Window x:Class="Monitorian.Core.Views.BrightnessScheduleWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:properties="clr-namespace:Monitorian.Core.Properties"
+		Title="{x:Static properties:Resources.BrightnessSchedule}"
+		Width="380" SizeToContent="Height" MaxHeight="720"
+		ResizeMode="NoResize" ShowInTaskbar="True" Topmost="True"
+		WindowStartupLocation="CenterScreen"
+		Background="{DynamicResource App.Background.Plain}"
+		Foreground="{DynamicResource App.Foreground}"
+		FontSize="13"
+		UseLayoutRounding="True">
+	<Window.Resources>
+		<SolidColorBrush x:Key="Accent" Color="{DynamicResource App.Background.Accent.StaticColor}"/>
+		<SolidColorBrush x:Key="Accent.Hover" Color="{DynamicResource App.Background.Accent.MouseOverColor}"/>
+		<SolidColorBrush x:Key="Vacant" Color="#FF808080" Opacity="0.45"/>
+		<SolidColorBrush x:Key="Invalid" Color="#FFE5484D"/>
+
+		<!-- Slider: thin track filled with accent color up to a round thumb -->
+		<Style x:Key="TrackButton" TargetType="{x:Type RepeatButton}">
+			<Setter Property="OverridesDefaultStyle" Value="True"/>
+			<Setter Property="Focusable" Value="False"/>
+			<Setter Property="IsTabStop" Value="False"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type RepeatButton}">
+						<Grid Background="Transparent">
+							<Border Height="4" CornerRadius="2"
+									VerticalAlignment="Center"
+									Background="{TemplateBinding Background}"/>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<Style x:Key="BrightnessSlider" TargetType="{x:Type Slider}">
+			<Setter Property="Minimum" Value="0"/>
+			<Setter Property="Maximum" Value="100"/>
+			<Setter Property="SmallChange" Value="1"/>
+			<Setter Property="LargeChange" Value="10"/>
+			<Setter Property="TickFrequency" Value="1"/>
+			<Setter Property="IsSnapToTickEnabled" Value="True"/>
+			<Setter Property="IsMoveToPointEnabled" Value="True"/>
+			<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+			<Setter Property="Stylus.IsPressAndHoldEnabled" Value="False"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type Slider}">
+						<Track x:Name="PART_Track" Height="28">
+							<Track.DecreaseRepeatButton>
+								<RepeatButton Style="{StaticResource TrackButton}"
+											  Background="{StaticResource Accent}"
+											  Command="{x:Static Slider.DecreaseLarge}"/>
+							</Track.DecreaseRepeatButton>
+							<Track.IncreaseRepeatButton>
+								<RepeatButton Style="{StaticResource TrackButton}"
+											  Background="{StaticResource Vacant}"
+											  Command="{x:Static Slider.IncreaseLarge}"/>
+							</Track.IncreaseRepeatButton>
+							<Track.Thumb>
+								<Thumb x:Name="thumb" OverridesDefaultStyle="True" Focusable="False">
+									<Thumb.Template>
+										<ControlTemplate TargetType="{x:Type Thumb}">
+											<Grid Width="20" Height="20" Background="Transparent">
+												<Ellipse x:Name="ring"
+														 Fill="{DynamicResource App.Background.Plain}"
+														 Stroke="{StaticResource Accent}" StrokeThickness="2"/>
+												<Ellipse x:Name="dot"
+														 Width="10" Height="10"
+														 Fill="{StaticResource Accent}"
+														 RenderTransformOrigin="0.5,0.5">
+													<Ellipse.RenderTransform>
+														<ScaleTransform ScaleX="1" ScaleY="1"/>
+													</Ellipse.RenderTransform>
+												</Ellipse>
+											</Grid>
+											<ControlTemplate.Triggers>
+												<Trigger Property="IsMouseOver" Value="True">
+													<Setter TargetName="dot" Property="Fill" Value="{StaticResource Accent.Hover}"/>
+													<Setter TargetName="dot" Property="RenderTransform">
+														<Setter.Value>
+															<ScaleTransform ScaleX="1.25" ScaleY="1.25"/>
+														</Setter.Value>
+													</Setter>
+												</Trigger>
+												<Trigger Property="IsDragging" Value="True">
+													<Setter TargetName="dot" Property="RenderTransform">
+														<Setter.Value>
+															<ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+														</Setter.Value>
+													</Setter>
+												</Trigger>
+											</ControlTemplate.Triggers>
+										</ControlTemplate>
+									</Thumb.Template>
+								</Thumb>
+							</Track.Thumb>
+						</Track>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- Time box -->
+		<Style x:Key="TimeBox" TargetType="{x:Type TextBox}">
+			<Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+			<Setter Property="CaretBrush" Value="{DynamicResource App.Foreground}"/>
+			<Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+			<Setter Property="MaxLength" Value="5"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type TextBox}">
+						<Border x:Name="border"
+								Height="30" CornerRadius="4"
+								BorderBrush="{DynamicResource App.Border.Outline}" BorderThickness="1"
+								Background="Transparent">
+							<ScrollViewer x:Name="PART_ContentHost"
+										  VerticalAlignment="Center"
+										  Focusable="False"/>
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsKeyboardFocused" Value="True">
+								<Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
+							</Trigger>
+							<DataTrigger Binding="{Binding IsTimeValid}" Value="False">
+								<Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Invalid}"/>
+							</DataTrigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- Flat buttons -->
+		<Style x:Key="FlatButton" TargetType="{x:Type Button}">
+			<Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource App.Border.Outline}"/>
+			<Setter Property="Padding" Value="14,5"/>
+			<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type Button}">
+						<Border x:Name="border"
+								CornerRadius="4"
+								BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+								Background="{TemplateBinding Background}">
+							<ContentPresenter Margin="{TemplateBinding Padding}"
+											  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="border" Property="Background" Value="{DynamicResource Menu.Item.Background.MouseOver}"/>
+							</Trigger>
+							<Trigger Property="IsKeyboardFocused" Value="True">
+								<Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
+							</Trigger>
+							<Trigger Property="IsEnabled" Value="False">
+								<Setter Property="Opacity" Value="0.4"/>
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<Style x:Key="AccentButton" TargetType="{x:Type Button}" BasedOn="{StaticResource FlatButton}">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background" Value="{StaticResource Accent}"/>
+			<Setter Property="BorderBrush" Value="{StaticResource Accent}"/>
+			<Style.Triggers>
+				<Trigger Property="IsMouseOver" Value="True">
+					<Setter Property="Background" Value="{StaticResource Accent.Hover}"/>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+
+		<Style x:Key="IconButton" TargetType="{x:Type Button}" BasedOn="{StaticResource FlatButton}">
+			<Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+			<Setter Property="FontSize" Value="10"/>
+			<Setter Property="Width" Value="28"/>
+			<Setter Property="Height" Value="28"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="Foreground" Value="{DynamicResource App.Foreground.Shadow}"/>
+		</Style>
+
+		<!-- On/off switch -->
+		<Style x:Key="Switch" TargetType="{x:Type ToggleButton}">
+			<Setter Property="Foreground" Value="{DynamicResource App.Foreground}"/>
+			<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type ToggleButton}">
+						<Grid Background="Transparent">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+							<ContentPresenter VerticalAlignment="Center"/>
+							<Border x:Name="track" Grid.Column="1"
+									Width="40" Height="20" CornerRadius="10"
+									BorderBrush="{DynamicResource App.Foreground.Shadow}" BorderThickness="1"
+									Background="Transparent">
+								<Ellipse x:Name="knob"
+										 Width="12" Height="12" Margin="4,0"
+										 HorizontalAlignment="Left"
+										 Fill="{DynamicResource App.Foreground.Shadow}"/>
+							</Border>
+						</Grid>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsChecked" Value="True">
+								<Setter TargetName="track" Property="Background" Value="{StaticResource Accent}"/>
+								<Setter TargetName="track" Property="BorderBrush" Value="{StaticResource Accent}"/>
+								<Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
+								<Setter TargetName="knob" Property="Fill" Value="White"/>
+							</Trigger>
+							<Trigger Property="IsKeyboardFocused" Value="True">
+								<Setter TargetName="track" Property="BorderBrush" Value="{StaticResource Accent.Hover}"/>
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Resources>
+
+	<DockPanel Margin="20,16,20,18">
+		<!-- On/off -->
+		<ToggleButton DockPanel.Dock="Top"
+					  Style="{StaticResource Switch}"
+					  IsChecked="{Binding IsEnabled}">
+			<TextBlock FontSize="15" Text="{x:Static properties:Resources.UseBrightnessSchedule}"/>
+		</ToggleButton>
+
+		<!-- Day overview -->
+		<Grid DockPanel.Dock="Top" Margin="0,16,0,0">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="44"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<Border Grid.RowSpan="1"
+					CornerRadius="4"
+					Background="{StaticResource Vacant}" Opacity="0.25"/>
+			<ItemsControl Grid.Row="0" ItemsSource="{Binding Hours}" Focusable="False">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Rows="1"/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Border Margin="1,0" CornerRadius="2,2,0,0"
+								VerticalAlignment="Bottom" Height="44"
+								Background="{StaticResource Accent}"
+								RenderTransformOrigin="0.5,1">
+							<Border.RenderTransform>
+								<ScaleTransform ScaleY="{Binding Level}"/>
+							</Border.RenderTransform>
+							<Border.ToolTip>
+								<TextBlock>
+									<Run Text="{Binding Hour, StringFormat={}{0:00}:00, Mode=OneWay}"/>
+									<Run Text="–"/>
+									<Run Text="{Binding Brightness, StringFormat={}{0}%, Mode=OneWay}"/>
+								</TextBlock>
+							</Border.ToolTip>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+			<ItemsControl Grid.Row="1" Margin="0,3,0,0" ItemsSource="{Binding Hours}" Focusable="False">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Rows="1"/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<TextBlock FontSize="10"
+								   Foreground="{DynamicResource App.Foreground.Shadow}"
+								   Text="{Binding Label}"/>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</Grid>
+
+		<!-- Buttons -->
+		<StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0"
+					HorizontalAlignment="Right" Orientation="Horizontal">
+			<Button Style="{StaticResource FlatButton}"
+					IsCancel="True"
+					Content="{x:Static properties:Resources.Cancel}"
+					Click="Cancel_Click"/>
+			<Button x:Name="SaveButton" Margin="8,0,0,0"
+					Style="{StaticResource AccentButton}"
+					IsEnabled="{Binding IsValid}"
+					Content="{x:Static properties:Resources.Save}"
+					Click="Save_Click"/>
+		</StackPanel>
+
+		<!-- Error -->
+		<TextBlock DockPanel.Dock="Bottom" Margin="0,10,0,0"
+				   Foreground="{StaticResource Invalid}" TextWrapping="Wrap"
+				   Text="{Binding Error}">
+			<TextBlock.Style>
+				<Style TargetType="{x:Type TextBlock}">
+					<Style.Triggers>
+						<DataTrigger Binding="{Binding Error}" Value="{x:Null}">
+							<Setter Property="Visibility" Value="Collapsed"/>
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</TextBlock.Style>
+		</TextBlock>
+
+		<!-- Add -->
+		<Button DockPanel.Dock="Bottom" Margin="0,8,0,0"
+				HorizontalAlignment="Left"
+				Style="{StaticResource FlatButton}" BorderBrush="Transparent" Padding="6,5"
+				Click="Add_Click">
+			<StackPanel Orientation="Horizontal">
+				<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center"
+						   Foreground="{StaticResource Accent}" Text="&#xE710;"/>
+				<TextBlock Margin="8,0,0,0" Text="{x:Static properties:Resources.AddTime}"/>
+			</StackPanel>
+		</Button>
+
+		<!-- Entries -->
+		<ScrollViewer Margin="0,14,0,0"
+					  VerticalScrollBarVisibility="Auto" Focusable="False">
+			<StackPanel>
+				<TextBlock Margin="0,4"
+						   Foreground="{DynamicResource App.Foreground.Shadow}" TextWrapping="Wrap"
+						   Text="{x:Static properties:Resources.BrightnessScheduleEmpty}"
+						   Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverterKey}}"/>
+
+				<ItemsControl x:Name="EntryList" ItemsSource="{Binding Entries}" Focusable="False">
+					<ItemsControl.ItemTemplate>
+						<DataTemplate>
+							<Grid Margin="0,4">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="62"/>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="44"/>
+									<ColumnDefinition Width="Auto"/>
+								</Grid.ColumnDefinitions>
+
+								<TextBox Grid.Column="0"
+										 Style="{StaticResource TimeBox}"
+										 Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}"
+										 LostKeyboardFocus="TimeBox_LostKeyboardFocus"/>
+
+								<Slider Grid.Column="1" Margin="12,0,6,0"
+										Style="{StaticResource BrightnessSlider}"
+										Value="{Binding Brightness}"
+										PreviewMouseWheel="Slider_PreviewMouseWheel"/>
+
+								<TextBlock Grid.Column="2"
+										   HorizontalAlignment="Right" VerticalAlignment="Center"
+										   FontFamily="Segoe UI Semibold"
+										   Text="{Binding Brightness, StringFormat={}{0}%}"/>
+
+								<Button Grid.Column="3" Margin="6,0,0,0"
+										Style="{StaticResource IconButton}"
+										Content="&#xE711;"
+										ToolTip="{x:Static properties:Resources.Remove}"
+										Click="Remove_Click"/>
+							</Grid>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</StackPanel>
+		</ScrollViewer>
+	</DockPanel>
+</Window>

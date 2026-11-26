@@ -67,6 +67,12 @@ public partial class MenuWindow : Window
 		}
 	}
 
+	private void EditBrightnessSchedule_Click(object sender, RoutedEventArgs e)
+	{
+		this.Close();
+		BrightnessScheduleWindow.ShowSingle(_controller.Settings);
+	}
+
 	#region Show/Close
 
 	public void DepartFromForeground()

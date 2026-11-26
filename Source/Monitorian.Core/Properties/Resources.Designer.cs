@@ -106,6 +106,78 @@ namespace Monitorian.Core.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use brightness schedule
+        /// </summary>
+        public static string UseBrightnessSchedule {
+            get {
+                return ResourceManager.GetString("UseBrightnessSchedule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit brightness schedule
+        /// </summary>
+        public static string EditBrightnessSchedule {
+            get {
+                return ResourceManager.GetString("EditBrightnessSchedule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Brightness schedule
+        /// </summary>
+        public static string BrightnessSchedule {
+            get {
+                return ResourceManager.GetString("BrightnessSchedule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add time
+        /// </summary>
+        public static string AddTime {
+            get {
+                return ResourceManager.GetString("AddTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No times yet. Add a time and choose the brightness that starts then.
+        /// </summary>
+        public static string BrightnessScheduleEmpty {
+            get {
+                return ResourceManager.GetString("BrightnessScheduleEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove
+        /// </summary>
+        public static string Remove {
+            get {
+                return ResourceManager.GetString("Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save
+        /// </summary>
+        public static string Save {
+            get {
+                return ResourceManager.GetString("Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel
+        /// </summary>
+        public static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string Close {

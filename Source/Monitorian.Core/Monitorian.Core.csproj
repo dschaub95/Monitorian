@@ -86,6 +86,7 @@
     <Compile Include="Models\Monitor\WmiMonitorItem.cs" />
     <Compile Include="Models\Sensor\LightSensor.cs" />
     <Compile Include="Models\Watcher\BrightnessConnector.cs" />
+    <Compile Include="Models\Watcher\BrightnessScheduler.cs" />
     <Compile Include="Models\Watcher\BrightnessWatcher.cs" />
     <Compile Include="Models\Watcher\DisplayInformationWatcher.cs" />
     <Compile Include="Models\Watcher\DisplaySettingsWatcher.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Models\Watcher\SystemEventsComplement.cs" />
     <Compile Include="Models\Watcher\TimerWatcher.cs" />
     <Compile Include="Models\AppDataService.cs" />
+    <Compile Include="Models\BrightnessSchedule.cs" />
     <Compile Include="Models\ConsoleService.cs" />
     <Compile Include="Models\DocumentService.cs" />
     <Compile Include="Models\LanguageService.cs" />
@@ -116,6 +118,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\BrightnessScheduleViewModel.cs" />
     <Compile Include="ViewModels\DevSectionViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\MenuWindowViewModel.cs" />
@@ -157,6 +160,9 @@
     </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\BrightnessScheduleWindow.xaml.cs">
+      <DependentUpon>BrightnessScheduleWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MenuWindow.xaml.cs">
       <DependentUpon>MenuWindow.xaml</DependentUpon>
@@ -298,6 +304,10 @@
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\BrightnessScheduleWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MenuWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

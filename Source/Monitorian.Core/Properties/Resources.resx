@@ -192,4 +192,28 @@
   <data name="UseLargeElements" xml:space="preserve">
     <value>Use large sliders</value>
   </data>
+  <data name="UseBrightnessSchedule" xml:space="preserve">
+    <value>Use brightness schedule</value>
+  </data>
+  <data name="EditBrightnessSchedule" xml:space="preserve">
+    <value>Edit brightness schedule</value>
+  </data>
+  <data name="BrightnessSchedule" xml:space="preserve">
+    <value>Brightness schedule</value>
+  </data>
+  <data name="AddTime" xml:space="preserve">
+    <value>Add time</value>
+  </data>
+  <data name="BrightnessScheduleEmpty" xml:space="preserve">
+    <value>No times yet. Add a time and choose the brightness that starts then.</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>

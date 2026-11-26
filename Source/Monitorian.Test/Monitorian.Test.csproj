@@ -43,6 +43,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BrightnessScheduleTest.cs" />
     <Compile Include="DeviceConversionTest.cs" />
     <Compile Include="MonitorConfigurationTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
