@@ -137,7 +137,7 @@ public abstract class AppController
 			}
 		}
 
-		_brightnessScheduler.Subscribe(ApplyScheduledBrightness, CanApplyScheduledBrightness);
+		_brightnessScheduler.Subscribe(ApplyScheduledBrightness, GetScheduledBrightnessBlocker, (message) => OperationRecorder.Record(message));
 		_brightnessScheduler.SetSchedule(BrightnessSchedule.Parse(Settings.BrightnessSchedule));
 		if (Settings.UsesBrightnessSchedule)
 			_brightnessScheduler.Start();
@@ -532,18 +532,37 @@ public abstract class AppController
 		monitor?.UpdateBrightness((int)sdrWhiteLevel);
 	}
 
-	protected virtual bool CanApplyScheduledBrightness() =>
-		!_sessionWatcher.IsLocked && !_powerWatcher.IsDisplayOff && (_scanCount == 0) && Monitors.Any(x => x.IsTarget && x.IsControllable);
+	protected virtual string GetScheduledBrightnessBlocker()
+	{
+		if (_sessionWatcher.IsLocked)
+			return "session locked";
+		if (_powerWatcher.IsDisplayOff)
+			return "display off";
+		if (_scanCount > 0)
+			return "scanning";
+		if (!Monitors.Any(x => x.IsReachable))
+			return $"no reachable monitor ({Monitors.Count} known)";
+		return null;
+	}
+
+	private static readonly TimeSpan _scheduledBrightnessTimeout = TimeSpan.FromSeconds(30);
 
 	protected virtual async Task<bool> ApplyScheduledBrightness(int brightness)
 	{
-		var monitors = Monitors.Where(x => x.IsTarget && x.IsControllable).ToArray();
+		// Include monitors not marked as target, e.g. when reading brightness failed once during
+		// a scan right after resume. A success makes them controllable again.
+		var monitors = Monitors.Where(x => x.IsReachable).ToArray();
 
-		var results = await Task.WhenAll(monitors.Select(m => Task.Run(() => m.SetBrightness(brightness))));
-		var succeeded = results.Any(x => x);
+		var applyTask = Task.WhenAll(monitors.Select(m => Task.Run(() => m.SetBrightness(brightness))));
+		if (await Task.WhenAny(applyTask, Task.Delay(_scheduledBrightnessTimeout)) != applyTask)
+		{
+			OperationRecorder.Record($"{nameof(ApplyScheduledBrightness)} ({brightness}%) timed out");
+			return false;
+		}
 
+		var results = applyTask.Result;
 		OperationRecorder.Record($"{nameof(ApplyScheduledBrightness)} ({brightness}% to {results.Count(x => x)}/{monitors.Length} monitor(s))");
-		return succeeded;
+		return results.Any(x => x);
 	}
 
 	private void ReflectMouseWheel(int delta)

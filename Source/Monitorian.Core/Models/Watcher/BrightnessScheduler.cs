@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 namespace Monitorian.Core.Models.Watcher;
 
@@ -19,7 +20,9 @@ internal class BrightnessScheduler : IDisposable
 
 	private readonly DispatcherTimer _timer;
 	private Func<int, Task<bool>> _apply;
-	private Func<bool> _canApply;
+	private Func<string> _getBlocker;
+	private Action<string> _record;
+	private string _lastBlocker;
 
 	private IReadOnlyList<BrightnessScheduleEntry> _entries = [];
 	private (DateTime Since, int Brightness)? _applied;
@@ -29,6 +32,15 @@ internal class BrightnessScheduler : IDisposable
 	{
 		_timer = new DispatcherTimer { Interval = _checkInterval };
 		_timer.Tick += (_, _) => Check();
+
+		SystemEvents.TimeChanged += OnTimeChanged;
+	}
+
+	private void OnTimeChanged(object sender, EventArgs e)
+	{
+		// DateTime.Now uses a cached time zone. Refresh it when the system clock or time zone changes.
+		TimeZoneInfo.ClearCachedData();
+		_timer.Dispatcher.BeginInvoke(new Action(Check));
 	}
 
 	public bool IsEnabled => _timer.IsEnabled;
@@ -37,11 +49,13 @@ internal class BrightnessScheduler : IDisposable
 	/// Sets the actions used to apply brightness.
 	/// </summary>
 	/// <param name="apply">Function to apply brightness (0-100) to monitors, returning whether any monitor accepted it</param>
-	/// <param name="canApply">Function to tell whether monitors can be reached now</param>
-	public void Subscribe(Func<int, Task<bool>> apply, Func<bool> canApply)
+	/// <param name="getBlocker">Function to tell why monitors cannot be changed now, or null if they can</param>
+	/// <param name="record">Action to record diagnostic messages</param>
+	public void Subscribe(Func<int, Task<bool>> apply, Func<string> getBlocker, Action<string> record = null)
 	{
 		this._apply = apply ?? throw new ArgumentNullException(nameof(apply));
-		this._canApply = canApply ?? (() => true);
+		this._getBlocker = getBlocker ?? (() => null);
+		this._record = record;
 	}
 
 	public void SetSchedule(IReadOnlyList<BrightnessScheduleEntry> entries)
@@ -83,15 +97,24 @@ internal class BrightnessScheduler : IDisposable
 		if (target == _applied)
 			return;
 
-		if (!_canApply())
+		var blocker = _getBlocker();
+		if (blocker is not null)
+		{
+			// Record once per reason to avoid flooding the log every check.
+			if (blocker != _lastBlocker)
+				_record?.Invoke($"Scheduled brightness {target.Brightness}% from {target.Since:HH:mm} deferred: {blocker}");
+			_lastBlocker = blocker;
 			return; // Retry on next check.
+		}
+		_lastBlocker = null;
 
 		_isApplying = true;
 		try
 		{
 			if (await _apply(target.Brightness))
 				_applied = target;
-			// Otherwise retry on next check.
+			else
+				_record?.Invoke($"Scheduled brightness {target.Brightness}% from {target.Since:HH:mm} failed; retrying");
 		}
 		finally
 		{
@@ -116,6 +139,7 @@ internal class BrightnessScheduler : IDisposable
 
 		if (disposing)
 		{
+			SystemEvents.TimeChanged -= OnTimeChanged;
 			_timer.Stop();
 			_apply = null;
 		}
